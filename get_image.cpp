@@ -93,25 +93,22 @@ int main(int argc, char *args[])
         {
             cout << "Failed to load media! " << endl;
         }
-        else
+
+        // Hack to get window to stay up
+        SDL_Event e;
+        bool quit = false;
+        while (quit == false)
         {
+            while (SDL_PollEvent(&e))
+            {
+                if (e.type == SDL_EVENT_QUIT)
+                    quit = true;
+            }
             // Apply the image
             SDL_BlitSurface(gHelloWorld, NULL, gScreenSurface, NULL);
 
             // Update the surface
             SDL_UpdateWindowSurface(gWindow);
-
-            // Hack to get window to stay up
-            SDL_Event e;
-            bool quit = false;
-            while (quit == false)
-            {
-                while (SDL_PollEvent(&e))
-                {
-                    if (e.type == SDL_EVENT_QUIT)
-                        quit = true;
-                }
-            }
         }
     }
     close();
