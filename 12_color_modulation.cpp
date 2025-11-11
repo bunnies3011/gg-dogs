@@ -4,16 +4,23 @@
 
 using namespace std;
 
+const int SCREEN_WIDTH = 1280;
+const int SCREEN_HEIGHT = 720;
+
 bool init();
 
 bool loadMedia();
 
 void close();
 
+SDL_Window *gWindow = NULL;
+
+SDL_Renderer *gRenderer = NULL;
+
 class LTexture
 {
 public:
-    // Initialize variables
+    // Initializes variables;
     LTexture();
 
     // Deallocates memory
@@ -25,6 +32,9 @@ public:
     // Deallocates texture
     void free();
 
+    // Set color modulation
+    void setColor(Uint8 red, Uint8 green, Uint8 blue);
+
     // Renders texture at given point
     void render(float x, float y, SDL_FRect *clip = NULL);
 
@@ -33,37 +43,13 @@ public:
     float getHeight();
 
 private:
-    // The actual hardware texture
     SDL_Texture *mTexture;
 
-    // Image dimensions
     float mWidth;
     float mHeight;
 };
 
-SDL_Window *gWindow = NULL;
-
-SDL_Renderer *gRenderer = NULL;
-
-// Scene sprites
-SDL_FRect gSpriteClips[4];
-LTexture gSpriteSheetTexture;
-
-void LTexture ::render(float x, float y, SDL_FRect *clip)
-{
-    // Set rendering space and render to screen
-    SDL_FRect renderQuad = {x, y, mWidth, mHeight};
-
-    // Set clip rendering dimensions
-    if (clip != NULL)
-    {
-        renderQuad.w = clip->w;
-        renderQuad.h = clip->h;
-    }
-
-    // Render to screen
-    SDL_RenderTexture(gRenderer, mTexture, clip, &renderQuad);
-}
+LTexture gModulatedTexture;
 
 LTexture::LTexture()
 {
@@ -75,7 +61,6 @@ LTexture::LTexture()
 
 LTexture::~LTexture()
 {
-    // Deallocate
     free();
 }
 
@@ -125,6 +110,28 @@ void LTexture ::free()
     }
 }
 
+void LTexture ::setColor(Uint8 red, Uint8 green, Uint8 blue)
+{
+    // Modulate texture
+    SDL_SetTextureColorMod(mTexture, red, green, blue);
+}
+
+void LTexture ::render(float x, float y, SDL_FRect *clip)
+{
+    // Set rendering space and render to screen
+    SDL_FRect renderQuad = {x, y, mWidth, mHeight};
+
+    // Set clip rendering dimensions
+    if (clip != NULL)
+    {
+        renderQuad.w = clip->w;
+        renderQuad.h = clip->h;
+    }
+
+    // Render to screen
+    SDL_RenderTexture(gRenderer, mTexture, clip, &renderQuad);
+}
+
 float LTexture ::getWidth()
 {
     return mWidth;
@@ -135,57 +142,20 @@ float LTexture ::getHeight()
     return mHeight;
 }
 
-bool loadMedia()
-{
-    bool success = true;
-    if (!gSpriteSheetTexture.loadFromFile("src/11_clip_rendering_and_sprite_sheets/dots.png"))
-    {
-        cout << "Failed to load sprite sheet texture" << endl;
-        success = false;
-    }
-    else
-    {
-        // Set top left sprite
-        gSpriteClips[0].x = 0;
-        gSpriteClips[0].y = 0;
-        gSpriteClips[0].w = 100;
-        gSpriteClips[0].h = 100;
-
-        // Set top right sprite
-        gSpriteClips[1].x = 100;
-        gSpriteClips[1].y = 0;
-        gSpriteClips[1].w = 100;
-        gSpriteClips[1].h = 100;
-
-        // Set bottom left sprite
-        gSpriteClips[2].x = 0;
-        gSpriteClips[2].y = 100;
-        gSpriteClips[2].w = 100;
-        gSpriteClips[2].h = 100;
-
-        // Set bottom right sprite
-        gSpriteClips[3].x = 100;
-        gSpriteClips[3].y = 100;
-        gSpriteClips[3].w = 100;
-        gSpriteClips[3].h = 100;
-    }
-    return success;
-}
-
 bool init()
 {
     bool success = true;
     if (SDL_Init(SDL_INIT_VIDEO) == false)
     {
-        cout << "Failed to initialize" << endl;
+        cout << "Failed to initialize " << endl;
         success = false;
     }
     else
     {
-        gWindow = SDL_CreateWindow("SDL Tutorial", 1280, 720, SDL_WINDOW_RESIZABLE);
+        gWindow = SDL_CreateWindow("SDL_Tutorial", SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE);
         if (gWindow == NULL)
         {
-            cout << "Failed to load Window" << endl;
+            cout << "Window could not be created. Error " << SDL_GetError() << endl;
             success = false;
         }
         else
@@ -193,7 +163,7 @@ bool init()
             gRenderer = SDL_CreateRenderer(gWindow, NULL);
             if (gRenderer == NULL)
             {
-                cout << "Failed to load Renderer " << endl;
+                cout << "Could not render. Error: " << SDL_GetError() << endl;
                 success = false;
             }
             else
@@ -205,22 +175,33 @@ bool init()
     return success;
 }
 
+bool loadMedia()
+{
+    // Loading success flag
+    bool success = true;
+
+    // Load texture
+    if (!gModulatedTexture.loadFromFile("src/12_color_modulation/colors.png"))
+    {
+        printf("Failed to load colors texture!\n");
+        success = false;
+    }
+
+    return success;
+}
+
 void close()
 {
-    gSpriteSheetTexture.free();
+    gModulatedTexture.free();
 
     SDL_DestroyWindow(gWindow);
     SDL_DestroyRenderer(gRenderer);
-    gWindow = NULL;
-    gRenderer = NULL;
 
     SDL_Quit();
 }
 
 int main(int argc, char *args[])
 {
-    int SCREEN_WIDTH = 1280;
-    int SCREEN_HEIGHT = 720;
     if (!init())
     {
         cout << "Failed to initialize " << endl;
@@ -229,14 +210,15 @@ int main(int argc, char *args[])
     {
         if (!loadMedia())
         {
-
-            cout << "Failed to load Media " << endl;
+            cout << "Failed to load Media" << endl;
         }
         else
         {
             bool quit = false;
             SDL_Event e;
-
+            Uint8 r = 255;
+            Uint8 g = 255;
+            Uint8 b = 255;
             while (!quit)
             {
                 while (SDL_PollEvent(&e) != 0)
@@ -245,23 +227,39 @@ int main(int argc, char *args[])
                     {
                         quit = true;
                     }
+                    else if (e.type == SDL_EVENT_KEY_DOWN)
+                    {
+                        switch (e.key.key)
+                        {
+                        case SDLK_Q:
+                            r += 32;
+                            break;
+
+                        case SDLK_W:
+                            g += 32;
+                            break;
+
+                        case SDLK_E:
+                            b += 32;
+                            break;
+
+                        case SDLK_S:
+                            g -= 32;
+                            break;
+
+                        case SDLK_D:
+                            b -= 32;
+                            break;
+                        }
+                    }
                 }
+                // Clear screen
                 SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
                 SDL_RenderClear(gRenderer);
 
-                // Render top left sprite
-                gSpriteSheetTexture.render(0, 0, &gSpriteClips[0]);
+                gModulatedTexture.setColor(r, g, b);
+                gModulatedTexture.render(0, 0);
 
-                // Render top right sprite
-                gSpriteSheetTexture.render(SCREEN_WIDTH - gSpriteClips[1].w, 0, &gSpriteClips[1]);
-
-                // Render bottom left sprite
-                gSpriteSheetTexture.render(0, SCREEN_HEIGHT - gSpriteClips[2].h, &gSpriteClips[2]);
-
-                // Render bottom right sprite
-                gSpriteSheetTexture.render(SCREEN_WIDTH - gSpriteClips[3].w, SCREEN_HEIGHT - gSpriteClips[3].h, &gSpriteClips[3]);
-
-                // Update screen
                 SDL_RenderPresent(gRenderer);
             }
         }

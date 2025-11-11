@@ -8,8 +8,8 @@ LDFLAGS   := -L"$(SDL3_ROOT)/lib" -L"$(SDL3_IMAGE_ROOT)/lib"
 LIBS      := -lSDL3_image -lSDL3
 
 # Nếu code của bạn là test.c -> vẫn dùng g++ để link C libs
-SRC       := 11_clip_rendering_and_sprite_sheets.cpp   # đổi thành file của bạn: test.c / main.cpp ...
-TARGET    := 11_clip_rendering_and_sprite_sheets.exe
+SRC       := 12_color_modulation.cpp   # đổi thành file của bạn: test.c / main.cpp ...
+TARGET    := 12_color_modulation.exe
 
 # ==== rules ====
 all: $(TARGET)
