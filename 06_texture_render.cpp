@@ -85,7 +85,7 @@ bool loadMedia()
     bool success = true;
 
     // Load PNG texture
-    gTexture = loadTexture("src/07_texture_loading_and_rendering/texture.png");
+    gTexture = loadTexture("src/09_the_viewport/viewport.png");
     if (gTexture == NULL)
     {
         cout << "Failed to load texture image" << endl;
@@ -112,6 +112,8 @@ void close()
 
 int main(int argc, char *args[])
 {
+    int SCREEN_WIDTH = 1280;
+    int SCREEN_HEIGHT = 720;
     if (!init())
     {
         cout << "Failed to initialize" << endl;
@@ -137,12 +139,40 @@ int main(int argc, char *args[])
                         quit = true;
                     }
                 }
-                // Clear Screen
+                // 09-the-viewport
+                //  Clear Screen
+                SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
                 SDL_RenderClear(gRenderer);
 
+                // Top left corner viewport
+                SDL_Rect topLeftViewport;
+                topLeftViewport.x = 0;
+                topLeftViewport.y = 0;
+                topLeftViewport.w = SCREEN_WIDTH / 2;
+                topLeftViewport.h = SCREEN_HEIGHT / 2;
+                SDL_SetRenderViewport(gRenderer, &topLeftViewport);
                 // Render texture to screen
                 SDL_RenderTexture(gRenderer, gTexture, NULL, NULL);
 
+                // Top right viewport
+                SDL_Rect topRightViewport;
+                topRightViewport.x = SCREEN_WIDTH / 2;
+                topRightViewport.y = 0;
+                topRightViewport.w = SCREEN_WIDTH / 2;
+                topRightViewport.h = SCREEN_HEIGHT / 2;
+                SDL_SetRenderViewport(gRenderer, &topRightViewport);
+                // Render texture to screen
+                SDL_RenderTexture(gRenderer, gTexture, NULL, NULL);
+
+                // Bottom viewport
+                SDL_Rect bottomViewport;
+                bottomViewport.x = 0;
+                bottomViewport.y = SCREEN_HEIGHT / 2;
+                bottomViewport.w = SCREEN_WIDTH;
+                bottomViewport.h = SCREEN_HEIGHT / 2;
+                SDL_SetRenderViewport(gRenderer, &bottomViewport);
+                // Render texture to screen
+                SDL_RenderTexture(gRenderer, gTexture, NULL, NULL);
                 // Update screen
                 SDL_RenderPresent(gRenderer);
             }
